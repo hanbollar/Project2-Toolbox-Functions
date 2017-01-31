@@ -286,7 +286,8 @@ var attributes = {
     orientation: 45,
     wingSpeed: 3,
     wingCurvature: 1, 
-    motion: 1
+    motion: 1,
+    windSpeed: 0
 }
 /***** end: COLOR AND ATTRIBUTES *****/
 
@@ -338,6 +339,12 @@ function destroyFeathers(framework) {
         var feather = framework.scene.getObjectByName("feather_"+j); 
         if (feather !== undefined) {  
             framework.scene.remove(feather);
+
+            // destroying additional parts so no remnant features
+            // feather.dispose(); 
+            // feather.geometry.dispose();
+            // feather.material.dispose();
+            // feather.texture.dispose();
         }
         j++;
     }
@@ -496,6 +503,12 @@ function onLoad(framework) {
         // destroyFeathers(framework);
         // addFeathers(framework);
     });
+
+    // WINDSPEED
+    gui.add(attributes, 'windSpeed', 0, 3).step(1).listen().onChange(function(newVal) {
+        destroyFeathers(framework);
+        addFeathers(framework);
+    });
 }
 /***** end: BUILD THE SCENE *****/
 
@@ -525,6 +538,37 @@ function onUpdate(framework) {
         if (feather !== undefined) {  
             feather.position.set(calcX(i), calcY(i), calcZ(i));
             setScaleFeather(feather, i);
+            if (attributes.windSpeed > 0) {
+                var timeMod = 20;
+                var opptimeMod = 15;
+                if (attributes.windSpeed == 1) {
+                    // same values as initializec
+                } else if (attributes.windSpeed == 2) {
+                    timeMod = 15;
+                    opptimeMod = 10;
+                } else if (attributes.windSpeed == 3) {
+                    timeMod = 10;
+                    opptimeMod = 5;
+                } else {
+                    console.log("UNKNOWN WINDSPEED:" + attributes.windSpeed);
+                }
+                
+                
+                if (time % timeMod == 0) {
+                    var rot = Math.ceil(Math.random() * attributes.windSpeed * 5);
+                    var neg = 1.0;
+                    if (Math.random() > .5) {
+                        neg = -1.0;
+                    }
+                    var rotVal = neg * Math.random() * Math.PI / 180;
+                    feather.rotateZ(rotVal);
+                } else if (time % opptimeMod == 0) {
+                    // var axis = new THREE.Vector3(1, 0, 0);
+                    // var vector = new THREE.Vector3(100, 60, 20);
+                    // feather.quaternion.setFromUnitVectors(axis, vector.clone().normalize());
+                    feather.rotation.z = - feather.rotation.z;
+                }
+            }
 
             // var date = new Date();
             // feather.rotateZ(Math.cos(date.getTime() / 100) * 2 * Math.PI / 180 * i);  
